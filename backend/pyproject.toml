@@ -1,0 +1,15 @@
+[project]
+name = "strideai-backend"
+version = "0.1.0"
+description = "FastAPI backend for StrideAI Resolution Quest"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.10.0",
+    "opik>=0.2.0",
+    "langchain>=1.2.8",
+    "langchain-openai>=1.1.7",
+]
