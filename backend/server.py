@@ -97,28 +97,36 @@ def read_root():
 @app.post("/api/summarize-conversation", response_model=ConversationResponse)
 async def summarize_conversation(request: ConversationRequest):
     """
-    Summarize a voice conversation into a clear, concise goal statement.
+    Summarize a voice conversation into a clear, concise goal statement using an agent.
     """
     try:
         if not request.conversation.strip():
             raise HTTPException(status_code=400, detail="Conversation cannot be empty")
         
-        prompt = f"""Based on the following conversation with a user about their 2026 goals, 
-extract and create a clear, concise goal statement that captures their main objective.
+        # Create an agent for conversation summarization
+        conversation_agent = create_agent(
+            model=llm,
+            tools=[current_time],
+            system_prompt="""You are a goal extraction specialist. Based on conversations about 2026 goals,
+extract and create clear, concise goal statements that capture the main objective.
 
 The goal should be:
 - Specific and actionable
 - In 1-2 sentences maximum
 - Written from the user's perspective (first person)
-- Focus on the core objective they want to achieve
-
-Conversation:
-{request.conversation}
-
-Goal Statement:"""
-
-        response = await llm.ainvoke([HumanMessage(content=prompt)])
-        goal = response.content.strip()
+- Focus on the core objective they want to achieve"""
+        )
+        
+        # Invoke the agent
+        result = conversation_agent.invoke({
+            "messages": [{
+                "role": "user", 
+                "content": f"Extract the goal from this conversation:\n\n{request.conversation}"
+            }]
+        })
+        
+        # Extract the goal from the agent's response
+        goal = result['messages'][-1].content.strip()
         
         # Remove quotes if LLM wrapped the response in them
         if goal.startswith('"') and goal.endswith('"'):
@@ -209,12 +217,21 @@ async def generate_roadmap(request: ResolutionRequest):
                 additional_days.append(f"- Complete exercises and projects")
             full_plan += "\n" + "\n".join(additional_days)
         
-        # Generate a brief summary
-        summary_prompt = f"In 2-3 sentences, create a motivational summary for a {max_days}-day plan to achieve: {request.goal}"
-        
+        # Generate a brief summary using an agent
         try:
-            summary_response = await llm.ainvoke([HumanMessage(content=summary_prompt)])
-            summary = summary_response.content
+            summary_agent = create_agent(
+                model=llm,
+                tools=[],
+                system_prompt="You are a motivational coach. Create brief, inspiring 2-3 sentence summaries for goal achievement plans."
+            )
+            
+            summary_result = summary_agent.invoke({
+                "messages": [{
+                    "role": "user",
+                    "content": f"Create a motivational summary for a {max_days}-day plan to achieve: {request.goal}"
+                }]
+            })
+            summary = summary_result['messages'][-1].content
         except:
             summary = f"Your {max_days}-day action plan for '{request.goal}' is ready! Download the calendar to see your daily tasks."
         
@@ -231,13 +248,29 @@ async def generate_roadmap(request: ResolutionRequest):
         raise HTTPException(status_code=500, detail=f"Error generating feedback: {str(e)}")
 
 async def generate_daily_plan(goal: str, category: str, start_date: datetime, total_days: int, start_day: int, end_day: int, date_list: List[str]) -> str:
-    """Generate a daily plan for a specific range of days."""
+    """Generate a daily plan for a specific range of days using an agent."""
     
     num_days = end_day - start_day + 1
     
+    # Create an agent for planning with access to current_time tool
+    planning_agent = create_agent(
+        model=llm,
+        tools=[current_time],
+        system_prompt="""You are an expert goal planning assistant. You create detailed, actionable daily plans 
+that help people achieve their goals through progressive, structured learning and practice.
+
+Your plans must:
+- Include EVERY single day in the specified range with NO gaps
+- Format each day as: ## Day X (YYYY-MM-DD)
+- Provide 2-4 specific, concrete, actionable tasks per day
+- Build progressive difficulty from basics to advanced
+- Each day should logically build on previous days
+- Tasks must be specific (e.g., "Complete 5 coding exercises on loops" NOT "practice loops")"""
+    )
+    
     # Create example days with actual dates
     example_days = []
-    for i in range(min(5, num_days)):
+    for i in range(min(3, num_days)):
         day_num = start_day + i
         day_date = date_list[day_num - 1] if day_num <= len(date_list) else "TBD"
         example_days.append(f"## Day {day_num} ({day_date})")
@@ -263,15 +296,7 @@ Format each day EXACTLY like this with the actual date:
 
 ...continue for ALL days through Day {end_day}
 
-CRITICAL REQUIREMENTS:
-- Include EVERY day from {start_day} to {end_day} - NO EXCEPTIONS
-- Format: "## Day X (YYYY-MM-DD)" where X is day number and date is actual calendar date
-- Provide 2-4 specific, concrete tasks per day
-- Tasks must be actionable (e.g., "Complete 5 coding exercises on loops" NOT just "practice loops")
-- Build progressive difficulty from basics to advanced
-- Each day should logically build on previous days
-
-Example for "Learn Python" (Days 1-5 with dates):
+Example for "Learn Python" (Days 1-3):
 
 ## Day 1 (2026-02-05)
 - Install Python 3.11, VS Code, and configure environment
@@ -288,21 +313,14 @@ Example for "Learn Python" (Days 1-5 with dates):
 - Learn boolean logic with and/or/not operators
 - Create a grade calculator and number guessing game
 
-## Day 4 (2026-02-08)
-- Study for loops, while loops, and range()
-- Practice nested loops with pattern programs
-- Build a multiplication table and prime number finder
-
-## Day 5 (2026-02-09)
-- Learn function definition, parameters, and return values
-- Understand scope (local vs global variables)
-- Create a reusable math library with 10 functions
-
 Now create a similarly detailed plan for "{goal}" covering ALL days from {start_day} to {end_day}.
 Each day MUST include the actual date from the list provided."""
 
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
-    return response.content
+    result = planning_agent.invoke({
+        "messages": [{"role": "user", "content": prompt}]
+    })
+    
+    return result['messages'][-1].content
 
 @app.get("/health")
 def health_check():
