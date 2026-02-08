@@ -1,4 +1,4 @@
-# StrideAI Backend - Python FastAPI
+# strideAI Backend - Python FastAPI
 
 ## Setup Instructions
 

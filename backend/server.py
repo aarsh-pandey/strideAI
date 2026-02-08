@@ -11,12 +11,18 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from langchain.agents import create_agent
 from langchain.tools import tool
-from opik.integrations.langchain import OpikTracer
+
+
+from opik import configure 
+from opik.integrations.langchain import OpikTracer 
+
+configure() 
+opik_tracer = OpikTracer(thread_id='strideAI_thread') 
 
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="StrideAI Resolution Quest API")
+app = FastAPI(title="strideAI API")
 
 # Configure CORS
 app.add_middleware(
@@ -43,20 +49,20 @@ llm = ChatOpenAI(
 )
 
 # Configure Opik for observability
-OPIK_API_KEY = os.getenv("OPIK_API_KEY")
-OPIK_WORKSPACE = os.getenv("OPIK_WORKSPACE")
-opik_tracer = None
+# OPIK_API_KEY = os.getenv("OPIK_API_KEY")
+# OPIK_WORKSPACE = os.getenv("OPIK_WORKSPACE")
+# opik_tracer = None
 
-if OPIK_API_KEY:
-    try:
-        if OPIK_WORKSPACE:
-            opik.configure(api_key=OPIK_API_KEY, workspace=OPIK_WORKSPACE)
-        else:
-            opik.configure(api_key=OPIK_API_KEY)
-        opik_tracer = OpikTracer(thread_id='resolution_quest')
-        print(f"✓ Opik observability enabled")
-    except Exception as e:
-        print(f"⚠ Opik configuration failed: {e}")
+# if OPIK_API_KEY:
+#     try:
+#         if OPIK_WORKSPACE:
+#             opik.configure(api_key=OPIK_API_KEY, workspace=OPIK_WORKSPACE)
+#         else:
+#             opik.configure(api_key=OPIK_API_KEY)
+#         opik_tracer = OpikTracer(thread_id='resolution_quest')
+#         print(f"✓ Opik observability enabled")
+#     except Exception as e:
+#         print(f"⚠ Opik configuration failed: {e}")
 
 # Tool for getting current time
 @tool
@@ -92,7 +98,7 @@ class ConversationResponse(BaseModel):
 
 @app.get("/")
 def read_root():
-    return {"message": "StrideAI Resolution Quest API", "status": "running"}
+    return {"message": "strideAI API", "status": "running"}
 
 @app.post("/api/summarize-conversation", response_model=ConversationResponse)
 async def summarize_conversation(request: ConversationRequest):
@@ -122,8 +128,8 @@ The goal should be:
             "messages": [{
                 "role": "user", 
                 "content": f"Extract the goal from this conversation:\n\n{request.conversation}"
-            }]
-        })
+            }],
+        },config={"callbacks": [opik_tracer]})
         
         # Extract the goal from the agent's response
         goal = result['messages'][-1].content.strip()
@@ -230,7 +236,7 @@ async def generate_roadmap(request: ResolutionRequest):
                     "role": "user",
                     "content": f"Create a motivational summary for a {max_days}-day plan to achieve: {request.goal}"
                 }]
-            })
+            },config={"callbacks": [opik_tracer]})
             summary = summary_result['messages'][-1].content
         except:
             summary = f"Your {max_days}-day action plan for '{request.goal}' is ready! Download the calendar to see your daily tasks."
@@ -318,7 +324,7 @@ Each day MUST include the actual date from the list provided."""
 
     result = planning_agent.invoke({
         "messages": [{"role": "user", "content": prompt}]
-    })
+    },config={"callbacks": [opik_tracer]})
     
     return result['messages'][-1].content
 
@@ -329,7 +335,7 @@ def health_check():
 @app.on_event("startup")
 async def startup_event():
     print("\n" + "="*60)
-    print("🚀 StrideAI Resolution Quest Backend")
+    print("🚀 strideAI Backend")
     print("="*60)
     print(f"✓ Server running at: http://localhost:8000")
     print(f"✓ Health check: http://localhost:8000/health")

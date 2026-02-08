@@ -1,5 +1,5 @@
 {
-  "name": "strideAI Resolution Quest: 2026",
+  "name": "strideAI",
   "description": "An AI-powered companion to help you refine, track, and achieve your New Year resolutions using real-time voice conversations and advanced reasoning.",
   "requestFramePermissions": [
     "microphone"

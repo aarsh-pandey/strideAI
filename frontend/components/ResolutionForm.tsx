@@ -149,7 +149,7 @@ export const ResolutionForm: React.FC<ResolutionFormProps> = ({ initialGoal = ''
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//strideAI//ResolutionQuest//EN',
+      'PRODID:-//strideAI//strideAI//EN',
       ...icsEvents,
       'END:VCALENDAR'
     ].join('\r\n');

@@ -20,7 +20,7 @@ const App: React.FC = () => {
           <div>
             <h1 className="text-2xl font-black tracking-tight text-white">
               <span className="text-indigo-400 font-semibold mr-1">strideAI</span>
-              RESOLUTION <span className="text-indigo-400">QUEST</span>
+              {/* RESOLUTION <span className="text-indigo-400">QUEST</span> */}
             </h1>
             <p className="text-xs text-gray-500 font-medium uppercase tracking-[0.2em]">Unlock Your 2026 Potential</p>
           </div>
@@ -119,7 +119,7 @@ const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="py-6 px-12 border-t border-gray-800/50 flex flex-col md:flex-row justify-between items-center text-gray-500 text-xs">
-        <p>&copy; 2026 strideAI Resolution Quest. Built with Gemini Live API.</p>
+        <p>&copy; 2026 strideAI.</p>
         <div className="flex gap-6 mt-4 md:mt-0">
           <a href="#" className="hover:text-white transition-colors">Privacy</a>
           <a href="#" className="hover:text-white transition-colors">Safety Guidelines</a>

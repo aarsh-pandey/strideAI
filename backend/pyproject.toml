@@ -1,7 +1,7 @@
 [project]
 name = "strideai-backend"
 version = "0.1.0"
-description = "FastAPI backend for StrideAI Resolution Quest"
+description = "FastAPI backend for strideAI"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.115.0",

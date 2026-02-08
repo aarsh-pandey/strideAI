@@ -240,8 +240,8 @@ export const LiveConversation: React.FC<LiveConversationProps> = ({ onProceedToG
           </button>
         )}
         <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
-          <span className="font-semibold mr-1">strideAI</span>
-          Resolution Voice Coach
+          {/* <span className="font-semibold mr-1">strideAI</span> */}
+          Voice Coach
         </h2>
         <p className="text-gray-400 mb-8 max-w-md">
           Connect your microphone to have a real-time conversation about your 2026 goals.
